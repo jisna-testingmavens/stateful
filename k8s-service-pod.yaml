@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-vnc-service
+spec:
+  selector:
+    app: user-pod   # Match label of your StatefulSet or pod
+  ports:
+    - name: vnc
+      protocol: TCP
+      port: 5901
+      targetPort: 5901
+  type: LoadBalancer   # or NodePort if no LB available
