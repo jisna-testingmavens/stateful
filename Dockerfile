@@ -13,8 +13,8 @@ RUN apt-get update && \
         xvfb \
         x11vnc \
         websockify \
-        x11-apps \ 
-        && rm -rf /var/lib/apt/lists/*
+        x11-apps \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
 COPY requirements.txt .
@@ -26,10 +26,13 @@ COPY . .
 # Expose app and VNC ports
 EXPOSE 8000 5901
 
-# Start all services and run xeyes
+# Set DISPLAY variable globally
+ENV DISPLAY=:0
+
+# Start all services and run xeyes for verification
 CMD bash -c "\
 Xvfb :0 -screen 0 1920x1080x24 & \
 x11vnc -display :0 -nopw -forever -shared & \
 websockify 5901 localhost:5900 & \
-sleep 2 && DISPLAY=:0 xeyes & \
+sleep 2 && xeyes & \
 wait"
