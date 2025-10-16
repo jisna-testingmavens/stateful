@@ -14,6 +14,7 @@ RUN apt-get update && \
         x11vnc \
         websockify \
         x11-apps \
+        xterm \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
@@ -32,7 +33,11 @@ ENV DISPLAY=:0
 # Start all services and run xeyes for verification
 CMD bash -c "\
 Xvfb :0 -screen 0 1920x1080x24 & \
-x11vnc -display :0 -nopw -forever -shared & \
+sleep 2 && \
+x11vnc -display :0 -nopw -forever -shared -rfbport 5900 & \
+sleep 2 && \
 websockify 5901 localhost:5900 & \
-sleep 2 && xeyes & \
-wait"
+sleep 3 && \
+python3 /app/overlay.py & \
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload \
+"
