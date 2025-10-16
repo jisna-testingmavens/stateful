@@ -4,8 +4,11 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Install dependencies including xeyes
+# Enable universe repo and install dependencies
 RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository universe && \
+    apt-get update && \
     apt-get install -y \
         python3.10 \
         python3-pip \
@@ -20,16 +23,16 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your code
+# Copy your application code
 COPY . .
 
-# Expose app and VNC ports
+# Expose ports
 EXPOSE 8000 5901
 
-# Set DISPLAY variable globally
+# Set DISPLAY environment variable
 ENV DISPLAY=:0
 
-# Start all services and run xeyes for verification
+# Start services and run xeyes for verification
 CMD bash -c "\
 Xvfb :0 -screen 0 1920x1080x24 & \
 x11vnc -display :0 -nopw -forever -shared & \
