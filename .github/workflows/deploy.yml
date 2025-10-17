@@ -1,4 +1,4 @@
-name: Build and Push Stateful Pod Image
+name: Deploy Stateful Pod to EKS
 
 on:
   push:
@@ -8,16 +8,18 @@ on:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  CLUSTER_NAME: ${{ secrets.CLUSTER_NAME }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -25,10 +27,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+   
       - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -38,3 +42,17 @@ jobs:
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+   
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+
+      - name: Deploy to EKS
+        run: |
+          sed -i "s|image: .*|image: $IMAGE_URI|g" k8s-stateful-pod.yaml
+          
+          kubectl apply -f k8s-stateful-pod.yaml
+
+      - name: Verify rollout
+        run: kubectl rollout status statefulset/user-pod
