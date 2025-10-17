@@ -2,12 +2,14 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: user-pod
+  labels:
+    app: user-pod
 spec:
+  serviceName: "stateless-api-service"  
+  replicas: 3
   selector:
     matchLabels:
       app: user-pod
-  serviceName: "user-pod"
-  replicas: 3
   template:
     metadata:
       labels:
@@ -16,5 +18,7 @@ spec:
       containers:
         - name: user-pod
           image: 285982079759.dkr.ecr.us-east-1.amazonaws.com/statefull-repo:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          command: ["sh", "-c", "echo 'Hello World from $(hostname)' && uvicorn main:app --host 0.0.0.0 --port 8000"]
