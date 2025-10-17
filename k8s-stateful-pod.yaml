@@ -7,7 +7,7 @@ spec:
     matchLabels:
       app: user-pod
   serviceName: "user-pod"
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
